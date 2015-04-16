@@ -21,6 +21,10 @@ AI.prototype.eval = function() {
        + this.grid.maxValue() * maxWeight;
 };
 
+/* My attempt at the heuristic function. Combines monotonic, smoothness, boards
+  that prioritize open spaces, and merging large tiles.
+*/
+
 // alpha-beta depth first search
 AI.prototype.search = function(depth, alpha, beta, positions, cutoffs) {
   var bestScore;
