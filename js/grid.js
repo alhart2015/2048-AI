@@ -326,6 +326,27 @@ Grid.prototype.toString = function() {
   return string;
 }
 
+/* Used for the heuristic function. Returns the number of possible merges in
+  the board.
+*/
+Grid.prototype.smoothness = function() {
+  for (var i = 0; i < this.size; i++) {
+    for (var j = 0; j < this.size; j++) {
+      console.log(i);
+      console.log(j);
+      console.log(this.getVector(0));
+      console.log(this.getVector(1));
+      console.log(this.getVector(2));
+      console.log(this.getVector(3));
+    };
+  };
+}
+
+/*
+///////////////////////////// START of his heuristics
+// These are what he uses for the heuristic function
+
+
 // counts the number of isolated groups. 
 Grid.prototype.islands = function() {
   var self = this;
@@ -536,6 +557,10 @@ Grid.prototype.maxValue = function() {
 
   return Math.log(max) / Math.log(2);
 }
+
+
+///////////////////////////// END of his heuristics
+*/
 
 // WIP. trying to favor top-heavy distributions (force consolidation of higher value tiles)
 /*

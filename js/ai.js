@@ -2,6 +2,9 @@ function AI(grid) {
   this.grid = grid;
 }
 
+/*
+//////////////// HIS eval function
+
 // static evaluation function
 AI.prototype.eval = function() {
   var emptyCells = this.grid.availableCells().length;
@@ -21,9 +24,44 @@ AI.prototype.eval = function() {
        + this.grid.maxValue() * maxWeight;
 };
 
+///////////////// END of his eval function
+*/
+
+/*
+NOTE:
+  When defining moves,
+    0 = up
+    1 = right
+    2 = down
+    3 = left
+*/
+
 /* My attempt at the heuristic function. Combines monotonic, smoothness, boards
   that prioritize open spaces, and merging large tiles.
 */
+AI.prototype.eval = function() {
+  var emptySpaces = this.grid.availableCells().length;
+  // console.log(emptySpaces);
+  this.grid.smoothness();
+  return 1;
+};
+
+AI.prototype.search = function(depth, alpha, beta, positions, cutoffs) {
+  // console.log("SEARCH");
+  var h = this.eval();
+  return { move: 0, score: 0, positions: 0, cutoffs: 0 };
+};
+
+AI.prototype.getBest = function() {
+  return this.search(0, -10000, 10000, 0 ,0);
+};
+
+AI.prototype.iterativeDeep = function() {
+
+};
+
+/*
+/////////////// START of his search function
 
 // alpha-beta depth first search
 AI.prototype.search = function(depth, alpha, beta, positions, cutoffs) {
@@ -143,6 +181,9 @@ AI.prototype.iterativeDeep = function() {
   } while ( (new Date()).getTime() - start < minSearchTime);
   return best
 }
+
+//////////////// END of his AI function
+*/
 
 AI.prototype.translate = function(move) {
  return {
