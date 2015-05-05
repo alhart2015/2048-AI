@@ -64,7 +64,6 @@ GameManager.prototype.actuate = function () {
 // makes a given move and updates state
 GameManager.prototype.move = function(direction) {
   var result = this.grid.move(direction);
-  // console.log(result);
   this.score += result.score;
 
   if (!result.won) {
@@ -87,7 +86,6 @@ GameManager.prototype.move = function(direction) {
 // moves continuously until game is over
 GameManager.prototype.run = function() {
   var best = this.ai.getBest();
-  // console.log(best);
   this.move(best.move);
   var timeout = animationDelay;
   if (this.running && !this.over && !this.won) {

@@ -1,3 +1,15 @@
+/*
+  Notes:
+    - the grid is ordered funny. Top left is 0,0
+      x moves to the right, y moves down. In the following example,
+      the 2 tile is in position x = 2, y = 1:
+
+      x | x | x | x
+      x | x | 2 | x
+      x | x | x | x
+      x | x | x | x
+*/
+
 function AI(grid) {
   this.grid = grid;
 }
@@ -53,7 +65,11 @@ AI.prototype.search = function(depth, alpha, beta, positions, cutoffs) {
 };
 
 AI.prototype.getBest = function() {
-  return this.search(0, -10000, 10000, 0 ,0);
+  // return this.search(0, -10000, 10000, 0 ,0);
+
+  var moveMade = this.ruleMove();
+  console.log("Move made", moveMade);
+  return { move: moveMade, score: 0,  positions: 0, cutoffs: 0 };
 };
 
 AI.prototype.iterativeDeep = function() {

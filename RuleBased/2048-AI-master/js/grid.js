@@ -168,7 +168,6 @@ Grid.prototype.move = function (direction) {
   var cell, tile;
 
   var vector     = this.getVector(direction);
-  // console.log(vector);
   var traversals = this.buildTraversals(vector);
   var moved      = false;
   var score      = 0;
@@ -218,7 +217,7 @@ Grid.prototype.move = function (direction) {
 
         if (!self.positionsEqual(cell, tile)) {
           self.playerTurn = false;
-          // console.log('setting player turn to ', self.playerTurn);
+          //console.log('setting player turn to ', self.playerTurn);
           moved = true; // The tile moved from its original cell!
         }
       }
@@ -326,46 +325,6 @@ Grid.prototype.toString = function() {
   }
   return string;
 }
-
-/* Used for the heuristic function. Returns the number of possible merges in
-  the board.
-*/
-Grid.prototype.smoothness = function() {
-
-  var tile;
-
-  // Check for merges in each row
-  for (var i = 0; i < this.size; i++) {
-    row = this.cells[i];     // The cells in that row
-    for (var j = 0; j < row.length; j++) {
-      if (row[j]) {
-        console.log(row[j]);
-      }
-    };
-
-  }
-
-  // Check for merges in each column
-
-  // for (var i = 0; i < this.size; i++) {
-  //   for (var j = 0; j < this.size; j++) {
-  //     tile = this.cellContent({x: i, y: j});
-
-  //     if (tile) {
-  //       console.log("i", i);
-  //       console.log("j", j);
-  //       console.log(tile);
-  //     }
-
-
-  //   }
-  // }
-}
-
-/*
-///////////////////////////// START of his heuristics
-// These are what he uses for the heuristic function
-
 
 // counts the number of isolated groups. 
 Grid.prototype.islands = function() {
@@ -577,10 +536,6 @@ Grid.prototype.maxValue = function() {
 
   return Math.log(max) / Math.log(2);
 }
-
-
-///////////////////////////// END of his heuristics
-*/
 
 // WIP. trying to favor top-heavy distributions (force consolidation of higher value tiles)
 /*
