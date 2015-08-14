@@ -168,7 +168,6 @@ Grid.prototype.move = function (direction) {
   var cell, tile;
 
   var vector     = this.getVector(direction);
-  // console.log(vector);
   var traversals = this.buildTraversals(vector);
   var moved      = false;
   var score      = 0;
@@ -218,7 +217,7 @@ Grid.prototype.move = function (direction) {
 
         if (!self.positionsEqual(cell, tile)) {
           self.playerTurn = false;
-          // console.log('setting player turn to ', self.playerTurn);
+          //console.log('setting player turn to ', self.playerTurn);
           moved = true; // The tile moved from its original cell!
         }
       }
@@ -327,46 +326,6 @@ Grid.prototype.toString = function() {
   return string;
 }
 
-/* Used for the heuristic function. Returns the number of possible merges in
-  the board.
-*/
-Grid.prototype.smoothness = function() {
-
-  var tile;
-
-  // Check for merges in each row
-  for (var i = 0; i < this.size; i++) {
-    row = this.cells[i];     // The cells in that row
-    for (var j = 0; j < row.length; j++) {
-      if (row[j]) {
-        console.log(row[j]);
-      }
-    };
-
-  }
-
-  // Check for merges in each column
-
-  // for (var i = 0; i < this.size; i++) {
-  //   for (var j = 0; j < this.size; j++) {
-  //     tile = this.cellContent({x: i, y: j});
-
-  //     if (tile) {
-  //       console.log("i", i);
-  //       console.log("j", j);
-  //       console.log(tile);
-  //     }
-
-
-  //   }
-  // }
-}
-
-/*
-///////////////////////////// START of his heuristics
-// These are what he uses for the heuristic function
-
-
 // counts the number of isolated groups. 
 Grid.prototype.islands = function() {
   var self = this;
@@ -406,6 +365,32 @@ Grid.prototype.islands = function() {
   return islands;
 }
 
+// /*
+//   My smoothness function. Measures how smooth the board is. Smoothness is the 
+//   sum of the differences between the average value in a row and column and each 
+//   actual value there.
+// */
+// Grid.prototype.smoothness = function() {
+//   var smoothness = 0;
+
+//   // Measure along rows
+//   for (var i = 0; i < this.size; i++) {
+//     // Check the values in each row
+//     var avgVal = 0;
+//     var numCells = 0;
+//     for (var j = 0; j < this.size; j++) {
+//       if (this.cellOccupied(this.indexes[i][j])) {
+//         var value = this.cellContent( this.indexes[i][j] ).value;
+//         avgVal += value;
+//         numCells ++;
+//       }
+//     };
+//   };
+
+//   // Measure along columns
+
+//   return smoothness = 0;
+// };
 
 // measures how smooth the grid is (as if the values of the pieces
 // were interpreted as elevations). Sums of the pairwise difference
@@ -578,9 +563,53 @@ Grid.prototype.maxValue = function() {
   return Math.log(max) / Math.log(2);
 }
 
-
-///////////////////////////// END of his heuristics
+/* Returns a 1 if the highest tile on the board is in a corner, 0 if not
 */
+Grid.prototype.bigInCorner = function() {
+  var inCorner = false;
+  var bigTile = 0;
+  for (var i = 0; i < this.size; i++) {
+    for (var j = 0; j < this.size; j++) {
+      if (this.cellOccupied(this.indexes[i][j])) {
+        var value = this.cellContent(this.indexes[i][j]).value;
+        if (value > bigTile) {
+          // Biggest tile you've found so far. Is it in a corner?
+          bigTile = value;
+
+          // Top left corner
+          if (i === 0 && j === 0) {
+            inCorner = true;
+          }
+
+          // Top right corner
+          else if (i === 0 && j === 3) {
+            inCorner = true;
+          }
+
+          // Bottom right corner
+          else if (i === 3 && j === 3) {
+            inCorner = true;
+          }
+
+          // Bottom left corner
+          else if (i === 3 && j === 0) {
+            inCorner = true;
+          }
+
+          // It's not in a corner
+          else {
+            inCorner = false;
+          }
+        }
+      }
+    }
+  }
+  if (inCorner) {
+    return bigTile;
+  } else {
+    return 0;
+  }
+};
 
 // WIP. trying to favor top-heavy distributions (force consolidation of higher value tiles)
 /*

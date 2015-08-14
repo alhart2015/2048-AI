@@ -1,205 +1,128 @@
-/*
-  Notes:
-    - the grid is ordered funny. Top left is 0,0
-      x moves to the right, y moves down. In the following example,
-      the 2 tile is in position x = 2, y = 1:
-
-      x | x | x | x
-      x | x | 2 | x
-      x | x | x | x
-      x | x | x | x
-*/
-
 function AI(grid) {
   this.grid = grid;
 }
-
-/*
-//////////////// HIS eval function
 
 // static evaluation function
 AI.prototype.eval = function() {
   var emptyCells = this.grid.availableCells().length;
 
-  var smoothWeight = 0.1,
-      //monoWeight   = 0.0,
-      //islandWeight = 0.0,
-      mono2Weight  = 1.0,
-      emptyWeight  = 2.7,
-      maxWeight    = 1.0;
+  var smoothWeight = 0.5,
+      mono2Weight = 0.5,
+      emptyWeight = 2.5,
+      maxWeight = 1.5,
+      cornerWeight = 0.7;
+
+  //original weighting
+  // var smoothWeight = 0.1,
+  //     //monoWeight   = 0.0,
+  //     //islandWeight = 0.0,
+  //     mono2Weight  = 1.0,
+  //     emptyWeight  = 2.7,
+  //     maxWeight    = 1.0;
 
   return this.grid.smoothness() * smoothWeight
-       //+ this.grid.monotonicity() * monoWeight
-       //- this.grid.islands() * islandWeight
        + this.grid.monotonicity2() * mono2Weight
        + Math.log(emptyCells) * emptyWeight
        + this.grid.maxValue() * maxWeight;
 };
 
-///////////////// END of his eval function
-*/
+// expectimax search
+AI.prototype.search = function(depth, grid, playerTurn) {
+  var bestValue = 0;
+  var val = 0;
 
-/*
-NOTE:
-  When defining moves,
-    0 = up
-    1 = right
-    2 = down
-    3 = left
-*/
+  if (depth === 0) {
+    var tempAI = new AI(grid);
+    return tempAI.eval();
+  }
 
-/* My attempt at the heuristic function. Combines monotonic, smoothness, boards
-  that prioritize open spaces, and merging large tiles.
-*/
-AI.prototype.eval = function() {
-  var emptySpaces = this.grid.availableCells().length;
-  // console.log(emptySpaces);
-  this.grid.smoothness();
-  return 1;
-};
+  if (playerTurn) {
 
-AI.prototype.search = function(depth, alpha, beta, positions, cutoffs) {
-  // console.log("SEARCH");
-  var h = this.eval();
-  return { move: 0, score: 0, positions: 0, cutoffs: 0 };
-};
-
-AI.prototype.getBest = function() {
-  // return this.search(0, -10000, 10000, 0 ,0);
-
-  var moveMade = this.ruleMove();
-  console.log("Move made", moveMade);
-  return { move: moveMade, score: 0,  positions: 0, cutoffs: 0 };
-};
-
-AI.prototype.iterativeDeep = function() {
-
-};
-
-/*
-/////////////// START of his search function
-
-// alpha-beta depth first search
-AI.prototype.search = function(depth, alpha, beta, positions, cutoffs) {
-  var bestScore;
-  var bestMove = -1;
-  var result;
-
-  // the maxing player
-  if (this.grid.playerTurn) {
-    bestScore = alpha;
+    var validMoves = [];
     for (var direction in [0, 1, 2, 3]) {
-      var newGrid = this.grid.clone();
-      if (newGrid.move(direction).moved) {
-        positions++;
-        if (newGrid.isWin()) {
-          return { move: direction, score: 10000, positions: positions, cutoffs: cutoffs };
-        }
-        var newAI = new AI(newGrid);
+      var tempGrid = grid.clone();
 
-        if (depth == 0) {
-          result = { move: direction, score: newAI.eval() };
-        } else {
-          result = newAI.search(depth-1, bestScore, beta, positions, cutoffs);
-          if (result.score > 9900) { // win
-            result.score--; // to slightly penalize higher depth from win
-          }
-          positions = result.positions;
-          cutoffs = result.cutoffs;
-        }
-
-        if (result.score > bestScore) {
-          bestScore = result.score;
-          bestMove = direction;
-        }
-        if (bestScore > beta) {
-          cutoffs++
-          return { move: bestMove, score: beta, positions: positions, cutoffs: cutoffs };
-        }
+      if (tempGrid.move(direction).moved) {
+        validMoves.push(direction);
       }
     }
+
+    if (validMoves.length === 0) {
+      console.log(" playerTurn - no valid moves")
+      return bestValue;
+    }
+
+    for (var validMove in validMoves) {
+      var nextGrid = grid.clone();
+      nextGrid.move(validMove);
+      //var tempAI = new AI(nextGrid);
+      val = this.search(depth - 1, nextGrid, false);
+      if (Math.max(bestValue, val) === val) {
+        bestValue = val;
+      }
+      
+    }
+    
+    return bestValue;
+   
   }
+  else {
+    var expectedVal = 0;
+    var openCells = grid.availableCells();
+    var numPossibleBoards = openCells.length * 2;
 
-  else { // computer's turn, we'll do heavy pruning to keep the branching factor low
-    bestScore = beta;
-
-    // try a 2 and 4 in each cell and measure how annoying it is
-    // with metrics from eval
-    var candidates = [];
-    var cells = this.grid.availableCells();
-    var scores = { 2: [], 4: [] };
-    for (var value in scores) {
-      for (var i in cells) {
-        scores[value].push(null);
-        var cell = cells[i];
-        var tile = new Tile(cell, parseInt(value, 10));
-        this.grid.insertTile(tile);
-        scores[value][i] = -this.grid.smoothness() + this.grid.islands();
-        this.grid.removeTile(cell);
-      }
-    }
-
-    // now just pick out the most annoying moves
-    var maxScore = Math.max(Math.max.apply(null, scores[2]), Math.max.apply(null, scores[4]));
-    for (var value in scores) { // 2 and 4
-      for (var i=0; i<scores[value].length; i++) {
-        if (scores[value][i] == maxScore) {
-          candidates.push( { position: cells[i], value: parseInt(value, 10) } );
+    for (var value in [2,4]) {
+      for (var i in openCells) {
+        var cell = openCells[i];
+        var tile = new Tile(cell, value);
+        var nextGrid = grid.clone();
+        nextGrid.insertTile(tile);
+        //var tempAI = new AI(nextGrid);
+        if (tile.value === 2) {
+          expectedVal += (this.search(depth - 1, nextGrid, true).score * 0.9)/numPossibleBoards;
+        }
+        else {
+          expectedVal += (this.search(depth - 1, nextGrid, true).score * 0.1)/numPossibleBoards;
         }
       }
     }
-
-    // search on each candidate
-    for (var i=0; i<candidates.length; i++) {
-      var position = candidates[i].position;
-      var value = candidates[i].value;
-      var newGrid = this.grid.clone();
-      var tile = new Tile(position, value);
-      newGrid.insertTile(tile);
-      newGrid.playerTurn = true;
-      positions++;
-      newAI = new AI(newGrid);
-      result = newAI.search(depth, alpha, bestScore, positions, cutoffs);
-      positions = result.positions;
-      cutoffs = result.cutoffs;
-
-      if (result.score < bestScore) {
-        bestScore = result.score;
-      }
-      if (bestScore < alpha) {
-        cutoffs++;
-        return { move: null, score: alpha, positions: positions, cutoffs: cutoffs };
-      }
-    }
+    
+    return expectedVal;
   }
-
-  return { move: bestMove, score: bestScore, positions: positions, cutoffs: cutoffs };
 }
+
 
 // performs a search and returns the best move
 AI.prototype.getBest = function() {
-  return this.iterativeDeep();
+  return this.iterativeDeep(5);
 }
 
 // performs iterative deepening over the alpha-beta search
-AI.prototype.iterativeDeep = function() {
-  var start = (new Date()).getTime();
-  var depth = 0;
-  var best;
-  do {
-    var newBest = this.search(depth, -10000, 10000, 0 ,0);
-    if (newBest.move == -1) {
-      break;
-    } else {
-      best = newBest;
-    }
-    depth++;
-  } while ( (new Date()).getTime() - start < minSearchTime);
-  return best
-}
+AI.prototype.iterativeDeep = function(depth) {
+  var bestMove = 0; 
+  var moveScores = [];
+  var boards = [];
+  
+  console.log(moveScores);
 
-//////////////// END of his AI function
-*/
+  for (var direction in [0, 1, 2, 3]) {
+    var newGrid = this.grid.clone();
+    if (newGrid.move(direction).moved) {
+      moveScores.push(this.search(depth - 1, newGrid, false));
+    }
+    else {
+      moveScores.push(-1*Number.MAX_VALUE);
+    }
+  }
+  console.log(moveScores);
+  var maxValue = Math.max(moveScores[0], moveScores[1], moveScores[2], moveScores[3]);
+  bestMove = moveScores.indexOf(maxValue);
+
+  var best = { move: bestMove, score: 0, positions: 0, cutoffs: 0 }
+  return best;
+
+  
+}
 
 AI.prototype.translate = function(move) {
  return {
